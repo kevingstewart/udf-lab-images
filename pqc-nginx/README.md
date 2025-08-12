@@ -8,15 +8,15 @@ NGINX 1.27 web server configured to support post-quantum cryptography. The web s
 
 #### Usage
 ```bash
-docker run -d --name pqc-nginx --rm -p 9443:443 -p 9444:444 kevingstewart/udf-nginx-pqc:1.1
+docker run -d --name pqc-nginx --rm -p 9443:443 -p 9444:444 kevingstewart/udf-nginx-pqc:1.2
 ```
 
 #### Build
 ```bash
 git clone https://github.com/kevingstewart/udf-lab-images.git
 cd udf-lab-images/pqc-nginx
-docker build --no-cache --platform linux/x86_64 -t udf-nginx-pqc:1.1 .
-docker run -d --name pqc-nginx --rm -p 9443:443 -p 9444:444 udf-nginx-pqc:1.1
+docker build --no-cache -t udf-nginx-pqc:1.2 .
+docker run -d --name pqc-nginx --rm -p 9443:443 -p 9444:444 udf-nginx-pqc:1.2
 ```
 
 #### References
