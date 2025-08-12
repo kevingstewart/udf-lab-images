@@ -1,0 +1,29 @@
+## Web Server Service (self-contained)
+## Exposes :443 https
+## Exposes :444 https-pqc
+
+services:
+  webserver:
+    container_name: webserver
+    image: kevingstewart/udf-nginx-pqc:1.2
+    restart: unless-stopped
+    ports:
+      - 9443:443
+      - 9444:444
+    networks:
+      default: {}
+      webserver-net:
+        ipv4_address: 192.168.100.10
+
+networks:
+  default:
+    driver: bridge
+
+  webserver-net:
+    driver: macvlan
+    driver_opts:
+      parent: ens6.80
+    ipam:
+      driver: default
+      config:
+        - subnet: 192.168.100.0/24
