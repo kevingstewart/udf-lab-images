@@ -1,4 +1,4 @@
-# Use Ubuntu 24.04 as the base image
+# Use Ubuntu 22.04 as the base image
 FROM ubuntu:24.04
 
 # Set environment variables
@@ -109,6 +109,19 @@ RUN make && make install
 RUN mkdir /var/lib/nginx && mkdir /opt/nginx/conf.d
 ENV PATH="/opt/sbin:${PATH}"
 
+EXPOSE 443
+EXPOSE 444
+
+## Create and install new cert and key
+RUN openssl req -new -newkey rsa:2048 -days 365 -nodes -x509 \
+    -subj "/C=US/ST=NE/L=Omaha/O=F5/CN=www.f5labs.com" \
+    -keyout /etc/server.key  -out /etc/server.crt
+
+## Create website files
+WORKDIR /var/www/site/html
+COPY . .
+
+## Create nginx.conf
 RUN <<EOF cat > /opt/nginx/nginx.conf
 user  www-data;
 worker_processes  auto;
@@ -122,22 +135,32 @@ events {
 http {
     server {
         listen                  0.0.0.0:443 ssl;
+        server_name             webserver.local;
+        ssl_certificate         /etc/server.crt;
+        ssl_certificate_key     /etc/server.key;
+        location ./images/ {
+            root                /var/www/site/html/images;
+        }
+        location / {
+            root                /var/www/site/html;
+            index               index.html;
+            include             /opt/nginx/mime.types;
+        }
+    }
+    server {
+        listen                  0.0.0.0:444 ssl;
         ssl_certificate         /etc/server.crt;
         ssl_certificate_key     /etc/server.key;
         ssl_protocols           TLSv1.3;
         ssl_ecdh_curve          X25519MLKEM768;
 
         location / {
-            return 200 "\$ssl_curve \$ssl_curves";
+            default_type text/html;
+            return 200 "<html><head><title>PQC Test Success!</title></head><body><H2>PQC Test Success!</H1><p><b>Negotiated Protocol</b>: \$ssl_protocol </p><p><b>Negotiated Cipher</b>: \$ssl_cipher </p><p><b>Negotiated Curve</b>: \$ssl_curve </p><p><b>Supported Curves</b>: \$ssl_curves </p></body></html>";
         }
     }
 }
 EOF
-
-## Create and install new cert and key
-RUN openssl req -new -newkey rsa:2048 -days 365 -nodes -x509 \
-    -subj "/C=US/ST=NE/L=Omaha/O=F5/CN=www.f5labs.com" \
-    -keyout /etc/server.key  -out /etc/server.crt
 
 ## Start daemon on container run
 CMD ["nginx", "-g", "daemon off;"]
