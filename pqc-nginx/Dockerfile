@@ -33,9 +33,9 @@ RUN apt update && apt install -y ca-certificates
 WORKDIR /opt
 
 # Clone and build OpenSSL 3.2 from source
-RUN git clone --depth 1 --branch openssl-3.5.0 https://github.com/openssl/openssl.git && \
+RUN git clone --depth 1 --branch openssl-3.5 https://github.com/openssl/openssl.git && \
     cd openssl && \
-    ./config --prefix=${OPENSSL_PREFIX} --openssldir=${OPENSSL_PREFIX}/ssl shared zlib && \
+    ./config --prefix=${OPENSSL_PREFIX} --openssldir=${OPENSSL_PREFIX}/ssl --libdir=lib -Wl,-rpath,${OPENSSL_PREFIX}/lib shared zlib && \
     make -j$(nproc) && \
     make install && \
     ldconfig
@@ -64,9 +64,6 @@ EOF
 
 # Set OpenSSL configuration globally
 ENV OPENSSL_CONF=${OPENSSL_CONF}
-
-# Verify OpenSSL version
-RUN openssl version -a
 
 ## Install and configure nginx
 WORKDIR /build
