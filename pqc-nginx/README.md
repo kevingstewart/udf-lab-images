@@ -65,7 +65,6 @@ docker run -d --name pqc-nginx --rm -p 9443:443 -p 9444:444 udf-nginx-pqc:<tag>
 ```
 
 #### References
-- Dockerfile: https://github.com/kevingstewart/udf-lab-images/tree/main/pqc-nginx
 - Additional PQC Ciphers: https://github.com/open-quantum-safe/oqs-provider
 - PQC on NGINX: https://github.com/linode/docs/blob/develop/docs/guides/security/encryption/post-quantum-encryption-nginx-ubuntu2404/index.md
 
