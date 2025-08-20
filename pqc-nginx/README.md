@@ -6,6 +6,8 @@ NGINX 1.27 web server configured to support post-quantum cryptography. The web s
 - Port 443: Typical (non-PQC) website with sample travel agency content
 - Port 444: PQC site with simple cipher info output
 
+Tags: https://hub.docker.com/r/kevingstewart/udf-nginx-pqc/tags
+
 #### Usage
 ```bash
 docker run -d --name pqc-nginx --rm -p 9443:443 -p 9444:444 kevingstewart/udf-nginx-pqc:<tag>
