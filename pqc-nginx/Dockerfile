@@ -1,4 +1,4 @@
-# Use Ubuntu 22.04 as the base image
+# Use Ubuntu 24.04 as the base image
 FROM ubuntu:24.04
 
 # Set environment variables
@@ -29,13 +29,11 @@ RUN apt update && apt install -y \
 
 RUN apt update && apt install -y ca-certificates
 
-# Set working directory
-WORKDIR /opt
-
-# Clone and build OpenSSL 3.2 from source
-RUN git clone --depth 1 --branch openssl-3.5 https://github.com/openssl/openssl.git && \
-    cd openssl && \
-    ./config --prefix=${OPENSSL_PREFIX} --openssldir=${OPENSSL_PREFIX}/ssl --libdir=lib -Wl,-rpath,${OPENSSL_PREFIX}/lib shared zlib && \
+# Clone and build OpenSSL 3.5 from source
+WORKDIR /build
+RUN git clone --depth 1 --branch openssl-3.5 https://github.com/openssl/openssl.git
+WORKDIR /build/openssl
+RUN ./config --prefix=${OPENSSL_PREFIX} --openssldir=${OPENSSL_PREFIX}/ssl --libdir=lib -Wl,-rpath,${OPENSSL_PREFIX}/lib shared zlib && \
     make -j$(nproc) && \
     make install && \
     ldconfig
@@ -106,15 +104,17 @@ RUN make && make install
 RUN mkdir /var/lib/nginx && mkdir /opt/nginx/conf.d
 ENV PATH="/opt/sbin:${PATH}"
 
+## Expose ports
+EXPOSE 80
 EXPOSE 443
 EXPOSE 444
 
-## Create and install new cert and key
+## Create and install new server cert and key
 RUN openssl req -new -newkey rsa:2048 -days 365 -nodes -x509 \
     -subj "/C=US/ST=NE/L=Omaha/O=F5/CN=www.f5labs.com" \
     -keyout /etc/server.key  -out /etc/server.crt
 
-## Create website files
+## Copy website files
 WORKDIR /var/www/site/html
 COPY . .
 
@@ -130,6 +130,18 @@ events {
     worker_connections  1024;
 }
 http {
+    server {
+        listen                  0.0.0.0:80;
+        server_name             webserver.local;
+        location ./images/ {
+            root                /var/www/site/html/images;
+        }
+        location / {
+            root                /var/www/site/html;
+            index               index.html;
+            include             /opt/nginx/mime.types;
+        }
+    }
     server {
         listen                  0.0.0.0:443 ssl;
         server_name             webserver.local;
@@ -158,6 +170,9 @@ http {
     }
 }
 EOF
+
+## Delete /build folder
+RUN rm -rf /build
 
 ## Start daemon on container run
 CMD ["nginx", "-g", "daemon off;"]
