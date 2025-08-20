@@ -1,13 +1,15 @@
 ## Web Server Service (self-contained)
+## Exposes :80 http
 ## Exposes :443 https
 ## Exposes :444 https-pqc
 
 services:
   webserver:
     container_name: webserver
-    image: kevingstewart/udf-nginx-pqc:1.2
+    image: kevingstewart/udf-nginx-pqc:1.1
     restart: unless-stopped
     ports:
+      - 8080:80
       - 9443:443
       - 9444:444
     networks:
